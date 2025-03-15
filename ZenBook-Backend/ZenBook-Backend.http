@@ -1,0 +1,6 @@
+@ZenBook_Backend_HostAddress = http://localhost:5155
+
+GET {{ZenBook_Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
