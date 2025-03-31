@@ -21,6 +21,13 @@ namespace ZenBook_Backend
 
             var app = builder.Build();
 
+            // Seed the database by creating a service scope and calling the seeder
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                DbSeeder.Seed(services);
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -34,7 +41,7 @@ namespace ZenBook_Backend
             app.MapControllers();
 
             // CRUD Operation Example
-            RunCrudExample(app);
+           //  RunCrudExample(app);
 
             app.Run();
         }
