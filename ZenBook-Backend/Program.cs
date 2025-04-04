@@ -26,10 +26,17 @@ namespace ZenBook_Backend
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             // This registers the course service for business logic related to courses.
             builder.Services.AddScoped<ICourseService, CourseService>();
+            builder.Services.AddScoped<IClientService, ClientService>();
+            builder.Services.AddScoped<IInstructorService, InstructorService>();
+            builder.Services.AddScoped<ISessionService, SessionService>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+
+
 
 
             var app = builder.Build();
-
+            
             // Seed the database by creating a service scope and calling the seeder
             using (var scope = app.Services.CreateScope())
             {
