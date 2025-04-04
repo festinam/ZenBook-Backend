@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using ZenBook_Backend.Data;
 using ZenBook_Backend.Models;
+using ZenBook_Backend.Repositories;
+using ZenBook_Backend.Services;
 
 namespace ZenBook_Backend
 {
@@ -18,6 +20,13 @@ namespace ZenBook_Backend
             // Configure Database Connection
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+            // This registers a generic repository for any entity.
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            // This registers the course service for business logic related to courses.
+            builder.Services.AddScoped<ICourseService, CourseService>();
+
 
             var app = builder.Build();
 
@@ -37,7 +46,6 @@ namespace ZenBook_Backend
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
-
             app.MapControllers();
 
             // CRUD Operation Example

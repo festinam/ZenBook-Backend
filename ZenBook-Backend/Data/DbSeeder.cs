@@ -44,7 +44,7 @@ namespace ZenBook_Backend.Data
                     context.SaveChanges();
                 }
 
-                // SEED CLIENTS
+                
                 if (!context.Clients.Any())
                 {
                     var clientAlice = new Client
