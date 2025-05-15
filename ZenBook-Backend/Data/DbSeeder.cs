@@ -12,10 +12,10 @@ namespace ZenBook_Backend.Data
         {
             using (var context = serviceProvider.GetRequiredService<ApplicationDbContext>())
             {
-                
+
                 context.Database.Migrate();
 
-                
+
                 if (!context.Instructors.Any())
                 {
                     var instructorJohn = new Instructor
@@ -44,7 +44,7 @@ namespace ZenBook_Backend.Data
                     context.SaveChanges();
                 }
 
-                
+
                 if (!context.Clients.Any())
                 {
                     var clientAlice = new Client

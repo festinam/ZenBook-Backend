@@ -5,8 +5,8 @@ namespace ZenBook_Backend.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options) { }
+        public  ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+          : base(options) { }
 
         // DbSet for each entity in the database
         public DbSet<Instructor> Instructors { get; set; }
