@@ -21,7 +21,7 @@ namespace ZenBook_Backend.Controllers
 
         // GET: api/clients
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClientDto>>> GetClients()
+        public async Task<ActionResult<IEnumerable<ClientDto>>> GetClients([FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             var clients = await _clientService.GetAllClientsAsync();
             var clientDtos = clients.Select(c => new ClientDto
@@ -40,24 +40,20 @@ namespace ZenBook_Backend.Controllers
 
         // GET: api/clients/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClientDto>> GetClient(int id)
+
+        public async Task<ActionResult<ClientDto>> GetClient(int id, [FromHeader(Name = "X-Tenant-ID")] string tenantId
+)
         {
             var client = await _clientService.GetClientByIdAsync(id);
-            if (client == null)
-                return NotFound();
-
-            var clientDto = new ClientDto
+            if (!client.IsSuccess)
             {
-                Id = client.Id,
-                FullName = client.FullName,
-                Email = client.Email,
-                PhoneNumber = client.PhoneNumber,
-                DateOfBirth = client.DateOfBirth,
-                Address = client.Address,
-                ProfilePictureUrl = client.ProfilePictureUrl,
-                IsActive = client.IsActive
-            };
-            return Ok(clientDto);
+                if(client.StatusCode is StatusCodes.Status404NotFound)
+                    return NotFound(client);
+
+                return BadRequest(client);
+            }
+
+            return Ok(client);
         }
 
         // POST: api/clients
@@ -92,16 +88,16 @@ namespace ZenBook_Backend.Controllers
             if (client == null)
                 return NotFound();
 
-            // Update properties
-            client.FullName = clientDto.FullName;
-            client.Email = clientDto.Email;
-            client.PhoneNumber = clientDto.PhoneNumber;
-            client.DateOfBirth = clientDto.DateOfBirth;
-            client.Address = clientDto.Address;
-            client.ProfilePictureUrl = clientDto.ProfilePictureUrl;
-            client.IsActive = clientDto.IsActive;
+            //// Update properties
+            //client.FullName = clientDto.FullName;
+            //client.Email = clientDto.Email;
+            //client.PhoneNumber = clientDto.PhoneNumber;
+            //client.DateOfBirth = clientDto.DateOfBirth;
+            //client.Address = clientDto.Address;
+            //client.ProfilePictureUrl = clientDto.ProfilePictureUrl;
+            //client.IsActive = clientDto.IsActive;
 
-            await _clientService.UpdateClientAsync(client);
+            //await _clientService.UpdateClientAsync(client);
             return NoContent();
         }
 
