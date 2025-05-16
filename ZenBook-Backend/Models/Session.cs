@@ -1,6 +1,6 @@
 ﻿namespace ZenBook_Backend.Models
 {
-    public class Session
+    public class Session : IMustHaveTenant
     {
         public int Id { get; set; }
         public int CourseId { get; set; }
@@ -14,5 +14,7 @@
         public string Location { get; set; }
         public string Topic { get; set; }
         public bool IsCompleted { get; set; }  // To check if session is completed
+        public string TenantId { get; set; }
+
     }
 }

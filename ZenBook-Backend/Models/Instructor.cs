@@ -1,6 +1,6 @@
 ﻿namespace ZenBook_Backend.Models
 {
-    public class Instructor
+    public class Instructor : IMustHaveTenant
     {
         public int Id { get; set; }
         public string FullName { get; set; }
@@ -11,5 +11,7 @@
         public string Bio { get; set; }
         public bool IsActive { get; set; }  // To check if instructor is currently active
         public ICollection<Course> Courses { get; set; }  // Navigation property
+        public string TenantId { get; set; }
+
     }
 }

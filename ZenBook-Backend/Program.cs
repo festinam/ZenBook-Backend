@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using ZenBook_Backend.Data;
 using ZenBook_Backend.Models;
+using ZenBook_Backend.Middleware;
 using ZenBook_Backend.Repositories;
+using ZenBook_Backend.Service;
 using ZenBook_Backend.Services;
 
 namespace ZenBook_Backend
@@ -20,9 +22,10 @@ namespace ZenBook_Backend
             // Configure Database Connection
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<TenantDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-            // This registers a generic repository for any entity.
+            // This registers a generic repository for any entity. 
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             // This registers the course service for business logic related to courses.
             builder.Services.AddScoped<ICourseService, CourseService>();
@@ -30,19 +33,46 @@ namespace ZenBook_Backend
             builder.Services.AddScoped<IInstructorService, InstructorService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
-
-
-
+            builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 
 
             var app = builder.Build();
 
-            // Seed the database by creating a service scope and calling the seeder
+            // 1) Migrate & seed the Tenants table itself
             using (var scope = app.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                DbSeeder.Seed(services);
+                var tenantCtx = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+                tenantCtx.Database.Migrate();
+                if (!tenantCtx.Tenants.Any())
+                {
+                    tenantCtx.Tenants.AddRange(
+                      new Tenant { Id = "tenant1", Name = "Tenant One" },
+                      new Tenant { Id = "tenant2", Name = "Tenant Two" }
+                    );
+                    tenantCtx.SaveChanges();
+                }
             }
+
+            // 2) Now loop _those_ tenants and seed each one into your shared tables
+            using (var scope = app.Services.CreateScope())
+            {
+                var tenantCtx = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+                var currentTenant = scope.ServiceProvider.GetRequiredService<ICurrentTenantService>();
+                var appDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                foreach (var t in tenantCtx.Tenants)
+                {
+                    // tell your context “we are now tenant X”
+                    currentTenant.TenantId = t.Id;
+
+                    appDb.Database.Migrate();
+
+                    // this will call your overriden SaveChanges() which
+                    // stamps TenantId on all new IMustHaveTenant entities:
+                    DbSeeder.Seed(appDb);
+                }
+            }
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -52,11 +82,13 @@ namespace ZenBook_Backend
             }
 
             app.UseHttpsRedirection();
+            app.UseMiddleware<TenantResolver>();
+
             app.UseAuthorization();
             app.MapControllers();
 
             // CRUD Operation Example
-            //  RunCrudExample(app);
+            // RunCrudExample(app);
 
             app.Run();
         }

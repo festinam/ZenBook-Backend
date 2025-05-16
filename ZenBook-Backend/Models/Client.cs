@@ -1,6 +1,6 @@
 ﻿namespace ZenBook_Backend.Models
 {
-    public class Client
+    public class Client : IMustHaveTenant
     {
         public int Id { get; set; }
         public string FullName { get; set; }
@@ -12,5 +12,7 @@
         public bool IsActive { get; set; }
         public ICollection<Session> Sessions { get; set; }  // Navigation property for sessions
         public ICollection<Payment> Payments { get; set; }  // Navigation property for payments
+
+        public string TenantId { get; set; }
     }
 }
