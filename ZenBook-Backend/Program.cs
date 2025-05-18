@@ -240,7 +240,7 @@ namespace ZenBook_Backend
 
                 // DELETE: Delete a client (assuming client.Id == 1)
                 var clientToDelete = context.Clients.FirstOrDefault(c => c.Id == 1);
-                if (clientToDelete != null)
+                if (clientToDelete != null)git 
                 {
                     context.Clients.Remove(clientToDelete);
                     context.SaveChanges();
