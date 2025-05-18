@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ZenBook_Backend.Models;
 using ZenBook_Backend.Service;
 
 namespace ZenBook_Backend.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         // 1) Injected service that holds the current TenantId
         private readonly ICurrentTenantService _currentTenantService;
