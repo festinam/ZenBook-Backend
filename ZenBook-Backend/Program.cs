@@ -5,19 +5,52 @@ using ZenBook_Backend.Middleware;
 using ZenBook_Backend.Repositories;
 using ZenBook_Backend.Service;
 using ZenBook_Backend.Services;
+using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 namespace ZenBook_Backend
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+                // 2. Define the security scheme
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter `Bearer {token}`"
+                });
+
+                // 3. Require the scheme globally (so the Authorize button appears)
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id   = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+            });
 
             // Configure Database Connection
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -25,7 +58,40 @@ namespace ZenBook_Backend
             builder.Services.AddDbContext<TenantDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // This registers a generic repository for any entity. 
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opts => {
+
+            })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            var jwt = builder.Configuration.GetSection("Jwt");
+            var key = Encoding.UTF8.GetBytes(jwt["Key"]);
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwt["Issuer"],
+                    ValidAudience = jwt["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
+            // This registers a generic repository for any entity.
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             // This registers the course service for business logic related to courses.
             builder.Services.AddScoped<ICourseService, CourseService>();
@@ -36,7 +102,35 @@ namespace ZenBook_Backend
             builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 
 
+            //Qekjo o  e re dmth per Front vyn
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
+
             var app = builder.Build();
+
+
+
+            // Program.cs (after builder.Build()) -- authotication
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //  var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            //foreach (var role in new[] { "Admin", "User" })
+            //{
+            //  if (!await roleMgr.RoleExistsAsync(role))
+            //    await roleMgr.CreateAsync(new IdentityRole(role));
+            //}
+            //}
+
+
+
 
             // 1) Migrate & seed the Tenants table itself
             using (var scope = app.Services.CreateScope())
@@ -73,18 +167,29 @@ namespace ZenBook_Backend
                 }
             }
 
-
+            //Edhe qetu  e ki nje ndryshim
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                    // optionally:
+                    c.RoutePrefix = string.Empty; // serve at root
+                });
+
             }
 
+            app.UseCors("AllowAll"); //qekjo e re per front
             app.UseHttpsRedirection();
             app.UseMiddleware<TenantResolver>();
 
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
 
             // CRUD Operation Example
