@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace ZenBook_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ClientsController : ControllerBase
     {
         private readonly IClientService _clientService;
@@ -45,12 +47,9 @@ namespace ZenBook_Backend.Controllers
 )
         {
             var client = await _clientService.GetClientByIdAsync(id);
-            if (!client.IsSuccess)
+            if (client is null)
             {
-                if(client.StatusCode is StatusCodes.Status404NotFound)
-                    return NotFound(client);
-
-                return BadRequest(client);
+                return NotFound();
             }
 
             return Ok(client);
@@ -58,7 +57,7 @@ namespace ZenBook_Backend.Controllers
 
         // POST: api/clients
         [HttpPost]
-        public async Task<ActionResult<ClientDto>> CreateClient(ClientDto clientDto)
+        public async Task<ActionResult<ClientDto>> CreateClient(ClientDto clientDto, [FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             // Map DTO to domain model
             var client = new Client
@@ -69,6 +68,7 @@ namespace ZenBook_Backend.Controllers
                 DateOfBirth = clientDto.DateOfBirth,
                 Address = clientDto.Address,
                 ProfilePictureUrl = clientDto.ProfilePictureUrl,
+                TenantId = tenantId,
                 IsActive = clientDto.IsActive
             };
 

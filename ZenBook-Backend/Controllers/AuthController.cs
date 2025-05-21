@@ -78,11 +78,17 @@ namespace ZenBook_Backend.Controllers
                 claims: claims,
                 expires: expires,
                 signingCredentials: creds
-            );
+            );  
+
 
             return Ok(new
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token),
+                tenant = user.TenantId,
+                userId = user.Id,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                email = user.Email,
                 expires = expires
             });
         }

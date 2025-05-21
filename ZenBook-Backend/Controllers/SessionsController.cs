@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace ZenBook_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class SessionsController : ControllerBase
     {
         private readonly ISessionService _sessionService;
@@ -65,7 +67,7 @@ namespace ZenBook_Backend.Controllers
 
         // POST: api/sessions
         [HttpPost]
-        public async Task<ActionResult<SessionDto>> CreateSession(SessionDto sessionDto)
+        public async Task<ActionResult<SessionDto>> CreateSession(SessionDto sessionDto, [FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             // Map the DTO to the domain model.
             var session = new Session
@@ -76,6 +78,7 @@ namespace ZenBook_Backend.Controllers
                 SessionDate = sessionDto.SessionDate,
                 SessionTime = sessionDto.SessionTime,
                 Location = sessionDto.Location,
+                TenantId = tenantId,
                 Topic = sessionDto.Topic,
                 IsCompleted = sessionDto.IsCompleted
             };

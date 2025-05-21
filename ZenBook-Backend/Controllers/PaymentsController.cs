@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace ZenBook_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
@@ -61,13 +63,14 @@ namespace ZenBook_Backend.Controllers
 
         // POST: api/payments
         [HttpPost]
-        public async Task<ActionResult<PaymentDto>> CreatePayment(PaymentDto paymentDto)
+        public async Task<ActionResult<PaymentDto>> CreatePayment(PaymentDto paymentDto, [FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             // Map DTO to domain model
             var payment = new Payment
             {
                 ClientId = paymentDto.ClientId,
                 Amount = paymentDto.Amount,
+                TenantId = tenantId,
                 PaymentDate = paymentDto.PaymentDate,
                 PaymentMethod = paymentDto.PaymentMethod,
                 IsSuccessful = paymentDto.IsSuccessful,

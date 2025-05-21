@@ -10,8 +10,8 @@ using ZenBook_Backend.Services;
 namespace ZenBook_Backend.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
+    [Authorize]
     public class CoursesController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -65,7 +65,7 @@ namespace ZenBook_Backend.Controllers
 
         // POST: api/courses
         [HttpPost]
-        public async Task<ActionResult<CourseDto>> CreateCourse(CourseDto courseDto)
+        public async Task<ActionResult<CourseDto>> CreateCourse(CourseDto courseDto, [FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             // Map DTO to domain model
             var course = new Course
@@ -76,6 +76,7 @@ namespace ZenBook_Backend.Controllers
                 EndDate = courseDto.EndDate,
                 Category = courseDto.Category,
                 DurationInHours = courseDto.DurationInHours,
+                TenantId = tenantId,
                 InstructorId = courseDto.InstructorId // Make sure the Instructor exists
             };
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using ZenBook_Backend.DTOs;
 using ZenBook_Backend.Models;
 using ZenBook_Backend.Repositories;
@@ -21,13 +22,9 @@ namespace ZenBook_Backend.Services
             return await _clientRepository.GetAllAsync();
         }
 
-        public async Task<Result<ClientDto>> GetClientByIdAsync(int id)
+        public async Task<ClientDto> GetClientByIdAsync(int id)
         {
             var client = await _clientRepository.GetByIdAsync(id);
-
-            if (client is null)
-                return Result<ClientDto>.NotFound(new ErrorModel("client_not_found", "Client not found"));
-
 
             var clientDto = new ClientDto
             {
@@ -41,7 +38,7 @@ namespace ZenBook_Backend.Services
                 IsActive = client.IsActive
             };
 
-            return Result<ClientDto>.Ok(clientDto,"Client retrieved successfully.");
+            return clientDto;
 
         }
 

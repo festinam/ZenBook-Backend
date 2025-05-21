@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace ZenBook_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InstructorsController : ControllerBase
     {
         private readonly IInstructorService _instructorService;
@@ -62,7 +64,7 @@ namespace ZenBook_Backend.Controllers
 
         // POST: api/instructors
         [HttpPost]
-        public async Task<ActionResult<InstructorDto>> CreateInstructor(InstructorDto instructorDto)
+        public async Task<ActionResult<InstructorDto>> CreateInstructor(InstructorDto instructorDto , [FromHeader(Name = "X-Tenant-ID")] string tenantId)
         {
             // Map DTO to domain model
             var instructor = new Instructor
@@ -73,6 +75,7 @@ namespace ZenBook_Backend.Controllers
                 DateOfBirth = instructorDto.DateOfBirth,
                 Department = instructorDto.Department,
                 Bio = instructorDto.Bio,
+                TenantId = tenantId,
                 IsActive = instructorDto.IsActive
             };
 
